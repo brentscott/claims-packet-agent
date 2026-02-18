@@ -52,6 +52,7 @@ function TaskList() {
           />
           <WorkflowTrigger
             workflowName="process-file"
+            multiple={true}
             contentHash={{ enabled: true }}
             customWorkflowInput={(files) => {
               return {
