@@ -9,6 +9,7 @@ import styles from "./HomePage.module.css";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { WorkflowProgress } from "@/lib/WorkflowProgress";
+import { FileText } from "lucide-react";
 
 export default function HomePage() {
   return <TaskList />;
@@ -26,7 +27,10 @@ function TaskList() {
     <div className={styles.page}>
       <main className={styles.main}>
         <div className={styles.grid}>
-          <ItemCount title="Total Items" key={`total-items-${reloadSignal}`} />
+          <ItemCount
+            title="Total Packets"
+            key={`total-items-${reloadSignal}`}
+          />
           <ItemCount
             title="Reviewed"
             filter={{
@@ -69,10 +73,34 @@ function TaskList() {
           key={reloadSignal}
           onRowClick={goToItem}
           builtInColumns={{
-            fileName: true,
+            fileName: {
+              header: "Packet Name",
+            },
             status: true,
             createdAt: true,
-            itemsToReview: true,
+            itemsToReview: {
+              header: "Documents",
+              getValue: (item: AgentDataItem) => {
+                // Count documents in the packet from the nested data
+                const packetData = (item.data as any)?.data;
+                if (
+                  packetData &&
+                  Array.isArray(packetData.documents)
+                ) {
+                  return packetData.documents.length;
+                }
+                return 0;
+              },
+              renderCell: (value: unknown) => {
+                const count = value as number;
+                return (
+                  <span className="inline-flex items-center gap-1 text-xs text-gray-600">
+                    <FileText className="h-3 w-3" />
+                    {count} file{count !== 1 ? "s" : ""}
+                  </span>
+                );
+              },
+            },
             actions: true,
           }}
         />
