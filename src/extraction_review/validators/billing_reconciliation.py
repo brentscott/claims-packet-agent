@@ -20,7 +20,12 @@ def run_billing_reconciliation_checks(
     results: list[ValidationResult] = []
 
     eobs = [d for d in documents if d.envelope.classified_type.value == "EOB"]
-    bills = [d for d in documents if d.envelope.classified_type.value == "MEDICAL_BILL"]
+    bills = [
+        d
+        for d in documents
+        if d.envelope.classified_type.value
+        in ("MEDICAL_BILL", "ITEMIZED_STATEMENT")
+    ]
 
     # Check for missing document types
     if eobs and not bills:
@@ -135,7 +140,10 @@ def _compare_line_items(
     results: list[ValidationResult] = []
 
     eob_items = eob.extracted_data.get("line_items", [])
-    bill_items = bill.extracted_data.get("line_items", [])
+    # Itemized statements use "charges" instead of "line_items"
+    bill_items = bill.extracted_data.get("line_items", []) or bill.extracted_data.get(
+        "charges", []
+    )
 
     # Build lookup of allowed amounts by CPT from EOB
     eob_allowed_by_cpt: dict[str, float] = {}

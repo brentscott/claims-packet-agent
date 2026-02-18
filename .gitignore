@@ -39,3 +39,7 @@ workflows.db
 workflows.json
 logs.jsonl
 data/
+
+# Sample / test data (PDFs are synthetic but large for git)
+sample_docs/
+tests/files/

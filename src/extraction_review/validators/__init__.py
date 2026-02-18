@@ -19,11 +19,11 @@ __all__ = [
 def run_all_validations(documents: list[ProcessedDocument]) -> list[ValidationResult]:
     """Run all validation checks across documents and return sorted results.
 
-    Executes 11 deterministic checks across 4 validator modules:
+    Executes 16 deterministic checks across 4 validator modules:
     - Math checks: EOB/bill line item sums
     - Billing reconciliation: EOB vs bill cross-document matching
     - Duplicate detection: CPT code duplicates across providers
-    - Coverage checks: Denied services, appeal deadlines
+    - Coverage checks: Denied services, appeal deadlines, prior auth, appeals
 
     Results are sorted by severity (HIGH first, then MEDIUM, LOW, INFO).
     """

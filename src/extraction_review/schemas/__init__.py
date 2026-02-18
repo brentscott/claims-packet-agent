@@ -17,6 +17,10 @@ from .medical_bill import BillLineItem, MedicalBillSchema
 from .packet_output import ClaimsPacketOutput, FinancialSummary, ProcessedDocument
 from .pharmacy import PharmacyReceiptSchema
 from .ub04 import UB04RevenueLine, UB04Schema
+from .dental_claim import DentalClaimSchema, DentalServiceLine
+from .prior_auth import AuthorizedService, PriorAuthSchema
+from .appeal_decision import AppealDecisionSchema
+from .itemized_statement import ItemizedCharge, ItemizedStatementSchema
 
 __all__ = [
     # Common
@@ -46,6 +50,17 @@ __all__ = [
     # Lab Report
     "LabTestResult",
     "LabReportSchema",
+    # Dental Claim
+    "DentalServiceLine",
+    "DentalClaimSchema",
+    # Prior Authorization
+    "AuthorizedService",
+    "PriorAuthSchema",
+    # Appeal Decision
+    "AppealDecisionSchema",
+    # Itemized Statement
+    "ItemizedCharge",
+    "ItemizedStatementSchema",
     # Output
     "ProcessedDocument",
     "FinancialSummary",
@@ -60,4 +75,8 @@ SCHEMA_REGISTRY: dict[str, type] = {
     "MEDICAL_BILL": MedicalBillSchema,
     "PHARMACY_RECEIPT": PharmacyReceiptSchema,
     "LAB_REPORT": LabReportSchema,
+    "DENTAL_CLAIM": DentalClaimSchema,
+    "PRIOR_AUTH": PriorAuthSchema,
+    "APPEAL_DECISION": AppealDecisionSchema,
+    "ITEMIZED_STATEMENT": ItemizedStatementSchema,
 }

@@ -392,6 +392,42 @@ class ClaimsPacketWorkflow(Workflow):
                 description="Schema for extracting lab report data",
             ),
         ],
+        dental_config: Annotated[
+            ExtractConfig,
+            ResourceConfig(
+                config_file="configs/config.json",
+                path_selector="extract-dental-claim",
+                label="Dental Claim Extraction",
+                description="Schema for extracting ADA dental claim form data",
+            ),
+        ],
+        prior_auth_config: Annotated[
+            ExtractConfig,
+            ResourceConfig(
+                config_file="configs/config.json",
+                path_selector="extract-prior-auth",
+                label="Prior Authorization Extraction",
+                description="Schema for extracting prior authorization letter data",
+            ),
+        ],
+        appeal_config: Annotated[
+            ExtractConfig,
+            ResourceConfig(
+                config_file="configs/config.json",
+                path_selector="extract-appeal-decision",
+                label="Appeal Decision Extraction",
+                description="Schema for extracting appeal decision letter data",
+            ),
+        ],
+        itemized_config: Annotated[
+            ExtractConfig,
+            ResourceConfig(
+                config_file="configs/config.json",
+                path_selector="extract-itemized-statement",
+                label="Itemized Statement Extraction",
+                description="Schema for extracting itemized hospital statement data",
+            ),
+        ],
     ) -> DocumentsExtractedEvent:
         """Extract structured data from each document using type-specific schemas."""
         state = await ctx.store.get_state()
@@ -403,6 +439,10 @@ class ClaimsPacketWorkflow(Workflow):
             "MEDICAL_BILL": bill_config,
             "PHARMACY_RECEIPT": pharmacy_config,
             "LAB_REPORT": lab_config,
+            "DENTAL_CLAIM": dental_config,
+            "PRIOR_AUTH": prior_auth_config,
+            "APPEAL_DECISION": appeal_config,
+            "ITEMIZED_STATEMENT": itemized_config,
         }
 
         extracted_docs: list[ProcessedDocument] = []

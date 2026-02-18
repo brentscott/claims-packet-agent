@@ -495,13 +495,373 @@
       "confidence_scores": true
     }
   },
+  "extract-dental-claim": {
+    "json_schema": {
+      "type": "object",
+      "properties": {
+        "claim_number": { "type": ["string", "null"], "description": "Claim number" },
+        "predetermination_number": { "type": ["string", "null"], "description": "Predetermination number" },
+        "document_date": { "type": ["string", "null"], "format": "date", "description": "Document date" },
+        "patient": {
+          "type": "object",
+          "properties": {
+            "first_name": { "type": ["string", "null"], "description": "Patient first name" },
+            "last_name": { "type": ["string", "null"], "description": "Patient last name" },
+            "date_of_birth": { "type": ["string", "null"], "format": "date", "description": "Patient date of birth" },
+            "member_id": { "type": ["string", "null"], "description": "Insurance member ID" },
+            "group_number": { "type": ["string", "null"], "description": "Insurance group number" },
+            "address": { "type": ["string", "null"], "description": "Patient address" }
+          },
+          "required": ["first_name", "last_name", "date_of_birth", "member_id", "group_number", "address"]
+        },
+        "subscriber": {
+          "type": "object",
+          "properties": {
+            "first_name": { "type": ["string", "null"], "description": "Subscriber first name" },
+            "last_name": { "type": ["string", "null"], "description": "Subscriber last name" },
+            "date_of_birth": { "type": ["string", "null"], "format": "date", "description": "Subscriber date of birth" },
+            "member_id": { "type": ["string", "null"], "description": "Subscriber member ID" },
+            "group_number": { "type": ["string", "null"], "description": "Subscriber group number" },
+            "address": { "type": ["string", "null"], "description": "Subscriber address" }
+          },
+          "required": ["first_name", "last_name", "date_of_birth", "member_id", "group_number", "address"]
+        },
+        "provider": {
+          "type": "object",
+          "properties": {
+            "name": { "type": ["string", "null"], "description": "Provider name" },
+            "npi": { "type": ["string", "null"], "description": "Provider NPI" },
+            "tax_id": { "type": ["string", "null"], "description": "Provider tax ID" },
+            "address": { "type": ["string", "null"], "description": "Provider address" },
+            "phone": { "type": ["string", "null"], "description": "Provider phone" }
+          },
+          "required": ["name", "npi", "tax_id", "address", "phone"]
+        },
+        "billing_provider": {
+          "type": "object",
+          "properties": {
+            "name": { "type": ["string", "null"], "description": "Billing provider name" },
+            "npi": { "type": ["string", "null"], "description": "Billing provider NPI" },
+            "tax_id": { "type": ["string", "null"], "description": "Billing provider tax ID" },
+            "address": { "type": ["string", "null"], "description": "Billing provider address" },
+            "phone": { "type": ["string", "null"], "description": "Billing provider phone" }
+          },
+          "required": ["name", "npi", "tax_id", "address", "phone"]
+        },
+        "insurance": {
+          "type": "object",
+          "properties": {
+            "payer_name": { "type": ["string", "null"], "description": "Insurance company name" },
+            "plan_name": { "type": ["string", "null"], "description": "Plan name" },
+            "plan_type": { "type": ["string", "null"], "description": "Plan type" },
+            "policy_number": { "type": ["string", "null"], "description": "Policy number" },
+            "group_number": { "type": ["string", "null"], "description": "Group number" }
+          },
+          "required": ["payer_name", "plan_name", "plan_type", "policy_number", "group_number"]
+        },
+        "date_of_service": { "type": ["string", "null"], "format": "date", "description": "Date of service" },
+        "place_of_treatment": { "type": ["string", "null"], "description": "Place of treatment" },
+        "is_orthodontic": { "type": ["boolean", "null"], "description": "Is orthodontic treatment" },
+        "is_prosthesis_replacement": { "type": ["boolean", "null"], "description": "Is prosthesis replacement" },
+        "prior_prosthesis_date": { "type": ["string", "null"], "format": "date", "description": "Prior prosthesis date" },
+        "diagnosis_codes": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Diagnosis codes"
+        },
+        "service_lines": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "service_date": { "type": ["string", "null"], "format": "date", "description": "Service date" },
+              "area_of_oral_cavity": { "type": ["string", "null"], "description": "Area of oral cavity" },
+              "tooth_system": { "type": ["string", "null"], "description": "Tooth system" },
+              "tooth_number": { "type": ["string", "null"], "description": "Tooth number" },
+              "tooth_surface": { "type": ["string", "null"], "description": "Tooth surface" },
+              "cdt_code": { "type": ["string", "null"], "description": "CDT code" },
+              "description": { "type": ["string", "null"], "description": "Service description" },
+              "fee": { "type": ["number", "null"], "description": "Fee" }
+            },
+            "required": ["service_date", "area_of_oral_cavity", "tooth_system", "tooth_number", "tooth_surface", "cdt_code", "description", "fee"]
+          },
+          "description": "Service lines"
+        },
+        "total_fee": { "type": ["number", "null"], "description": "Total fee" },
+        "amount_paid": { "type": ["number", "null"], "description": "Amount paid" },
+        "patient_responsibility": { "type": ["number", "null"], "description": "Patient responsibility" },
+        "remarks": { "type": ["string", "null"], "description": "Remarks" }
+      },
+      "required": ["claim_number", "predetermination_number", "document_date", "patient", "subscriber", "provider", "billing_provider", "insurance", "date_of_service", "place_of_treatment", "is_orthodontic", "is_prosthesis_replacement", "prior_prosthesis_date", "diagnosis_codes", "service_lines", "total_fee", "amount_paid", "patient_responsibility", "remarks"]
+    },
+    "settings": {
+      "extraction_mode": "PREMIUM",
+      "system_prompt": "Extract all fields from this ADA Dental Claim form. All dollar amounts should be positive numbers. Use null for fields not found.",
+      "citation_bbox": true,
+      "use_reasoning": false,
+      "cite_sources": true,
+      "confidence_scores": true
+    }
+  },
+  "extract-prior-auth": {
+    "json_schema": {
+      "type": "object",
+      "properties": {
+        "authorization_number": { "type": ["string", "null"], "description": "Authorization number" },
+        "reference_number": { "type": ["string", "null"], "description": "Reference number" },
+        "document_date": { "type": ["string", "null"], "format": "date", "description": "Document date" },
+        "patient": {
+          "type": "object",
+          "properties": {
+            "first_name": { "type": ["string", "null"], "description": "Patient first name" },
+            "last_name": { "type": ["string", "null"], "description": "Patient last name" },
+            "date_of_birth": { "type": ["string", "null"], "format": "date", "description": "Patient date of birth" },
+            "member_id": { "type": ["string", "null"], "description": "Insurance member ID" },
+            "group_number": { "type": ["string", "null"], "description": "Insurance group number" },
+            "address": { "type": ["string", "null"], "description": "Patient address" }
+          },
+          "required": ["first_name", "last_name", "date_of_birth", "member_id", "group_number", "address"]
+        },
+        "requesting_provider": {
+          "type": "object",
+          "properties": {
+            "name": { "type": ["string", "null"], "description": "Requesting provider name" },
+            "npi": { "type": ["string", "null"], "description": "Requesting provider NPI" },
+            "tax_id": { "type": ["string", "null"], "description": "Requesting provider tax ID" },
+            "address": { "type": ["string", "null"], "description": "Requesting provider address" },
+            "phone": { "type": ["string", "null"], "description": "Requesting provider phone" }
+          },
+          "required": ["name", "npi", "tax_id", "address", "phone"]
+        },
+        "servicing_provider": {
+          "type": "object",
+          "properties": {
+            "name": { "type": ["string", "null"], "description": "Servicing provider name" },
+            "npi": { "type": ["string", "null"], "description": "Servicing provider NPI" },
+            "tax_id": { "type": ["string", "null"], "description": "Servicing provider tax ID" },
+            "address": { "type": ["string", "null"], "description": "Servicing provider address" },
+            "phone": { "type": ["string", "null"], "description": "Servicing provider phone" }
+          },
+          "required": ["name", "npi", "tax_id", "address", "phone"]
+        },
+        "insurance": {
+          "type": "object",
+          "properties": {
+            "payer_name": { "type": ["string", "null"], "description": "Insurance company name" },
+            "plan_name": { "type": ["string", "null"], "description": "Plan name" },
+            "plan_type": { "type": ["string", "null"], "description": "Plan type" },
+            "policy_number": { "type": ["string", "null"], "description": "Policy number" },
+            "group_number": { "type": ["string", "null"], "description": "Group number" }
+          },
+          "required": ["payer_name", "plan_name", "plan_type", "policy_number", "group_number"]
+        },
+        "auth_status": { "type": ["string", "null"], "description": "Authorization status" },
+        "auth_type": { "type": ["string", "null"], "description": "Authorization type" },
+        "effective_date": { "type": ["string", "null"], "format": "date", "description": "Effective date" },
+        "expiration_date": { "type": ["string", "null"], "format": "date", "description": "Expiration date" },
+        "diagnosis_codes": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Diagnosis codes"
+        },
+        "authorized_services": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "cpt_code": { "type": ["string", "null"], "description": "CPT code" },
+              "description": { "type": ["string", "null"], "description": "Service description" },
+              "quantity_approved": { "type": ["integer", "null"], "description": "Quantity approved" },
+              "approved_amount": { "type": ["number", "null"], "description": "Approved amount" }
+            },
+            "required": ["cpt_code", "description", "quantity_approved", "approved_amount"]
+          },
+          "description": "Authorized services"
+        },
+        "conditions": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Conditions"
+        },
+        "place_of_service": { "type": ["string", "null"], "description": "Place of service" },
+        "denial_reason": { "type": ["string", "null"], "description": "Denial reason" },
+        "appeal_deadline": { "type": ["string", "null"], "format": "date", "description": "Appeal deadline" },
+        "appeal_instructions": { "type": ["string", "null"], "description": "Appeal instructions" },
+        "total_approved_amount": { "type": ["number", "null"], "description": "Total approved amount" }
+      },
+      "required": ["authorization_number", "reference_number", "document_date", "patient", "requesting_provider", "servicing_provider", "insurance", "auth_status", "auth_type", "effective_date", "expiration_date", "diagnosis_codes", "authorized_services", "conditions", "place_of_service", "denial_reason", "appeal_deadline", "appeal_instructions", "total_approved_amount"]
+    },
+    "settings": {
+      "extraction_mode": "PREMIUM",
+      "system_prompt": "Extract all fields from this Prior Authorization letter. All dollar amounts should be positive numbers. Use null for fields not found.",
+      "citation_bbox": true,
+      "use_reasoning": false,
+      "cite_sources": true,
+      "confidence_scores": true
+    }
+  },
+  "extract-appeal-decision": {
+    "json_schema": {
+      "type": "object",
+      "properties": {
+        "appeal_reference_number": { "type": ["string", "null"], "description": "Appeal reference number" },
+        "original_claim_number": { "type": ["string", "null"], "description": "Original claim number" },
+        "original_authorization_number": { "type": ["string", "null"], "description": "Original authorization number" },
+        "document_date": { "type": ["string", "null"], "format": "date", "description": "Document date" },
+        "patient": {
+          "type": "object",
+          "properties": {
+            "first_name": { "type": ["string", "null"], "description": "Patient first name" },
+            "last_name": { "type": ["string", "null"], "description": "Patient last name" },
+            "date_of_birth": { "type": ["string", "null"], "format": "date", "description": "Patient date of birth" },
+            "member_id": { "type": ["string", "null"], "description": "Insurance member ID" },
+            "group_number": { "type": ["string", "null"], "description": "Insurance group number" },
+            "address": { "type": ["string", "null"], "description": "Patient address" }
+          },
+          "required": ["first_name", "last_name", "date_of_birth", "member_id", "group_number", "address"]
+        },
+        "provider": {
+          "type": "object",
+          "properties": {
+            "name": { "type": ["string", "null"], "description": "Provider name" },
+            "npi": { "type": ["string", "null"], "description": "Provider NPI" },
+            "tax_id": { "type": ["string", "null"], "description": "Provider tax ID" },
+            "address": { "type": ["string", "null"], "description": "Provider address" },
+            "phone": { "type": ["string", "null"], "description": "Provider phone" }
+          },
+          "required": ["name", "npi", "tax_id", "address", "phone"]
+        },
+        "insurance": {
+          "type": "object",
+          "properties": {
+            "payer_name": { "type": ["string", "null"], "description": "Insurance company name" },
+            "plan_name": { "type": ["string", "null"], "description": "Plan name" },
+            "plan_type": { "type": ["string", "null"], "description": "Plan type" },
+            "policy_number": { "type": ["string", "null"], "description": "Policy number" },
+            "group_number": { "type": ["string", "null"], "description": "Group number" }
+          },
+          "required": ["payer_name", "plan_name", "plan_type", "policy_number", "group_number"]
+        },
+        "date_of_service": { "type": ["string", "null"], "format": "date", "description": "Date of service" },
+        "original_denial_date": { "type": ["string", "null"], "format": "date", "description": "Original denial date" },
+        "original_denial_reason": { "type": ["string", "null"], "description": "Original denial reason" },
+        "original_billed_amount": { "type": ["number", "null"], "description": "Original billed amount" },
+        "appeal_level": { "type": ["string", "null"], "description": "Appeal level" },
+        "decision": { "type": ["string", "null"], "description": "Decision" },
+        "decision_date": { "type": ["string", "null"], "format": "date", "description": "Decision date" },
+        "decision_rationale": { "type": ["string", "null"], "description": "Decision rationale" },
+        "approved_amount": { "type": ["number", "null"], "description": "Approved amount" },
+        "approved_services": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Approved services"
+        },
+        "adjusted_patient_responsibility": { "type": ["number", "null"], "description": "Adjusted patient responsibility" },
+        "next_appeal_level": { "type": ["string", "null"], "description": "Next appeal level" },
+        "next_appeal_deadline": { "type": ["string", "null"], "format": "date", "description": "Next appeal deadline" },
+        "external_review_available": { "type": ["boolean", "null"], "description": "External review available" },
+        "external_review_instructions": { "type": ["string", "null"], "description": "External review instructions" },
+        "cpt_codes": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "CPT codes"
+        },
+        "diagnosis_codes": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Diagnosis codes"
+        }
+      },
+      "required": ["appeal_reference_number", "original_claim_number", "original_authorization_number", "document_date", "patient", "provider", "insurance", "date_of_service", "original_denial_date", "original_denial_reason", "original_billed_amount", "appeal_level", "decision", "decision_date", "decision_rationale", "approved_amount", "approved_services", "adjusted_patient_responsibility", "next_appeal_level", "next_appeal_deadline", "external_review_available", "external_review_instructions", "cpt_codes", "diagnosis_codes"]
+    },
+    "settings": {
+      "extraction_mode": "PREMIUM",
+      "system_prompt": "Extract all fields from this Appeal Decision letter. All dollar amounts should be positive numbers. Use null for fields not found.",
+      "citation_bbox": true,
+      "use_reasoning": false,
+      "cite_sources": true,
+      "confidence_scores": true
+    }
+  },
+  "extract-itemized-statement": {
+    "json_schema": {
+      "type": "object",
+      "properties": {
+        "account_number": { "type": ["string", "null"], "description": "Account number" },
+        "statement_date": { "type": ["string", "null"], "format": "date", "description": "Statement date" },
+        "invoice_number": { "type": ["string", "null"], "description": "Invoice number" },
+        "medical_record_number": { "type": ["string", "null"], "description": "Medical record number" },
+        "patient": {
+          "type": "object",
+          "properties": {
+            "first_name": { "type": ["string", "null"], "description": "Patient first name" },
+            "last_name": { "type": ["string", "null"], "description": "Patient last name" },
+            "date_of_birth": { "type": ["string", "null"], "format": "date", "description": "Patient date of birth" },
+            "member_id": { "type": ["string", "null"], "description": "Insurance member ID" },
+            "group_number": { "type": ["string", "null"], "description": "Insurance group number" },
+            "address": { "type": ["string", "null"], "description": "Patient address" }
+          },
+          "required": ["first_name", "last_name", "date_of_birth", "member_id", "group_number", "address"]
+        },
+        "provider": {
+          "type": "object",
+          "properties": {
+            "name": { "type": ["string", "null"], "description": "Provider name" },
+            "npi": { "type": ["string", "null"], "description": "Provider NPI" },
+            "tax_id": { "type": ["string", "null"], "description": "Provider tax ID" },
+            "address": { "type": ["string", "null"], "description": "Provider address" },
+            "phone": { "type": ["string", "null"], "description": "Provider phone" }
+          },
+          "required": ["name", "npi", "tax_id", "address", "phone"]
+        },
+        "admission_date": { "type": ["string", "null"], "format": "date", "description": "Admission date" },
+        "discharge_date": { "type": ["string", "null"], "format": "date", "description": "Discharge date" },
+        "date_of_service_start": { "type": ["string", "null"], "format": "date", "description": "Date of service start" },
+        "date_of_service_end": { "type": ["string", "null"], "format": "date", "description": "Date of service end" },
+        "charges": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "service_date": { "type": ["string", "null"], "format": "date", "description": "Service date" },
+              "revenue_code": { "type": ["string", "null"], "description": "Revenue code" },
+              "cpt_code": { "type": ["string", "null"], "description": "CPT code" },
+              "description": { "type": ["string", "null"], "description": "Service description" },
+              "department": { "type": ["string", "null"], "description": "Department" },
+              "quantity": { "type": ["integer", "null"], "description": "Quantity" },
+              "unit_price": { "type": ["number", "null"], "description": "Unit price" },
+              "amount": { "type": ["number", "null"], "description": "Amount" }
+            },
+            "required": ["service_date", "revenue_code", "cpt_code", "description", "department", "quantity", "unit_price", "amount"]
+          },
+          "description": "Charges"
+        },
+        "total_charges": { "type": ["number", "null"], "description": "Total charges" },
+        "total_adjustments": { "type": ["number", "null"], "description": "Total adjustments" },
+        "total_insurance_payments": { "type": ["number", "null"], "description": "Total insurance payments" },
+        "total_patient_payments": { "type": ["number", "null"], "description": "Total patient payments" },
+        "balance_due": { "type": ["number", "null"], "description": "Balance due" },
+        "page_count": { "type": ["integer", "null"], "description": "Page count" },
+        "total_line_items": { "type": ["integer", "null"], "description": "Total line items" }
+      },
+      "required": ["account_number", "statement_date", "invoice_number", "medical_record_number", "patient", "provider", "admission_date", "discharge_date", "date_of_service_start", "date_of_service_end", "charges", "total_charges", "total_adjustments", "total_insurance_payments", "total_patient_payments", "balance_due", "page_count", "total_line_items"]
+    },
+    "settings": {
+      "extraction_mode": "PREMIUM",
+      "system_prompt": "Extract all fields from this Itemized Statement. All dollar amounts should be positive numbers. Use null for fields not found.",
+      "citation_bbox": true,
+      "use_reasoning": false,
+      "cite_sources": true,
+      "confidence_scores": true
+    }
+  },
   "extract": {
     "json_schema": {
       "type": "object",
       "properties": {
         "document_type": {
           "type": "string",
-          "description": "Type of document: EOB, CMS-1500, UB-04, MEDICAL_BILL, PHARMACY_RECEIPT, LAB_REPORT, or UNKNOWN"
+          "description": "Type of document: EOB, CMS-1500, UB-04, MEDICAL_BILL, PHARMACY_RECEIPT, LAB_REPORT, DENTAL_CLAIM, PRIOR_AUTH, APPEAL_DECISION, ITEMIZED_STATEMENT, or UNKNOWN"
         },
         "summary": {
           "type": "string",
@@ -548,6 +908,22 @@
       {
         "type": "LAB_REPORT",
         "description": "Laboratory test results report showing test names, values, units, reference ranges, and flags for abnormal results."
+      },
+      {
+        "type": "DENTAL_CLAIM",
+        "description": "ADA Dental Claim Form or dental insurance claim showing tooth numbers, surfaces, CDT procedure codes, and dental-specific services."
+      },
+      {
+        "type": "PRIOR_AUTH",
+        "description": "Prior authorization letter from an insurer showing authorization number, approved or denied services, effective dates, and conditions. May include approval or denial status."
+      },
+      {
+        "type": "APPEAL_DECISION",
+        "description": "Appeal decision letter regarding a previously denied claim, showing the original denial reason, appeal level, decision (overturned, upheld, partially approved), and next steps."
+      },
+      {
+        "type": "ITEMIZED_STATEMENT",
+        "description": "Detailed itemized hospital or provider statement showing individual charges by department, revenue code, and procedure with granular line-item detail. More detailed than a standard medical bill."
       },
       {
         "type": "UNKNOWN",

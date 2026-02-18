@@ -185,6 +185,35 @@ def _extract_all_service_lines(documents: list[ProcessedDocument]) -> list[dict]
                     }
                 )
 
+        elif doc_type == "DENTAL_CLAIM":
+            billing = data.get("billing_provider", {}).get("name") or provider
+            for item in data.get("service_lines", []):
+                lines.append(
+                    {
+                        "cpt_code": item.get("cdt_code"),
+                        "service_date": _parse_date(item.get("service_date")),
+                        "description": item.get("description"),
+                        "amount": item.get("fee"),
+                        "source": "DENTAL_CLAIM",
+                        "doc_id": doc_id,
+                        "provider": billing,
+                    }
+                )
+
+        elif doc_type == "ITEMIZED_STATEMENT":
+            for item in data.get("charges", []):
+                lines.append(
+                    {
+                        "cpt_code": item.get("cpt_code"),
+                        "service_date": _parse_date(item.get("service_date")),
+                        "description": item.get("description"),
+                        "amount": item.get("amount"),
+                        "source": "ITEMIZED_STATEMENT",
+                        "doc_id": doc_id,
+                        "provider": provider,
+                    }
+                )
+
     return lines
 
 
