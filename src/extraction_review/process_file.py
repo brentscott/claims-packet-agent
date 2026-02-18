@@ -635,6 +635,54 @@ class ClaimsPacketWorkflow(Workflow):
 # --- Helper Functions ---
 
 
+def _deduplicated_savings(validation_results: list[ValidationResult]) -> float:
+    """Calculate potential savings without double-counting overlapping checks.
+
+    Many checks flag the same underlying money from different angles:
+    - claim_denied, line_item_denied, zero_allowed_amount, patient_full_cost,
+      and prior_auth_vs_denial can all refer to the same denied claim amount.
+    - eob_vs_bill_amount and line_item_over_allowed are independent billing errors.
+    - duplicate_cpt_* flags genuinely duplicated charges.
+
+    Strategy: sum independent check types directly, but for denial-related
+    checks take only the claim-level amount (highest per-check_name) to avoid
+    counting the same denied dollars multiple times.
+    """
+    # Independent checks: sum all amounts directly
+    independent_checks = {
+        "eob_vs_bill_amount",
+        "line_item_over_allowed",
+        "duplicate_cpt_cross_provider",
+        "duplicate_cpt_same_provider",
+        "appeal_upheld",
+    }
+    # Denial-related checks: these overlap heavily, take max per check_name
+    denial_checks = {
+        "claim_denied",
+        "line_item_denied",
+        "zero_allowed_amount",
+        "patient_full_cost",
+        "prior_auth_vs_denial",
+    }
+
+    total = 0.0
+
+    # Sum independent checks directly
+    for r in validation_results:
+        if r.check_name in independent_checks and r.potential_overcharge:
+            total += r.potential_overcharge
+
+    # For denial-related checks, take only the highest single amount
+    # (typically claim_denied or patient_full_cost which represent the total)
+    denial_max = 0.0
+    for r in validation_results:
+        if r.check_name in denial_checks and r.potential_overcharge:
+            denial_max = max(denial_max, r.potential_overcharge)
+    total += denial_max
+
+    return total
+
+
 def _compute_financial_summary(
     documents: list[ProcessedDocument],
     validation_results: list[ValidationResult],
@@ -660,12 +708,12 @@ def _compute_financial_summary(
             if data.get("total_patient_responsibility"):
                 eob_patient_resp += data["total_patient_responsibility"]
 
-        elif doc_type == "MEDICAL_BILL":
+        elif doc_type in ("MEDICAL_BILL", "ITEMIZED_STATEMENT"):
             if data.get("balance_due"):
                 bill_patient_resp += data["balance_due"]
 
     discrepancy = bill_patient_resp - eob_patient_resp if eob_patient_resp > 0 else None
-    potential_savings = sum(r.potential_overcharge or 0 for r in validation_results)
+    potential_savings = _deduplicated_savings(validation_results)
     flagged_issues = sum(
         1
         for r in validation_results

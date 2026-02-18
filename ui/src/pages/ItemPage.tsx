@@ -177,17 +177,44 @@ export default function ItemPage() {
     return getPacketFileList(packetData);
   }, [packetData]);
 
+  // Build a human-readable label for the breadcrumb
+  const packetLabel = useMemo(() => {
+    if (!packetData) return null;
+    const parts: string[] = [];
+    const last = packetData.patient?.last_name?.trim();
+    const first = packetData.patient?.first_name?.trim();
+    if (last || first) {
+      parts.push([last, first].filter(Boolean).join(", "));
+    }
+    if (Array.isArray(packetData.documents) && packetData.documents.length > 0) {
+      const typeCounts: Record<string, number> = {};
+      for (const doc of packetData.documents) {
+        const t = doc.envelope?.classified_type ?? "UNKNOWN";
+        const label = t.replace(/_/g, " ").replace(/\b\w/g, (c: string) => c.toUpperCase());
+        typeCounts[label] = (typeCounts[label] || 0) + 1;
+      }
+      const summary = Object.entries(typeCounts)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 3)
+        .map(([t, n]) => `${n} ${t}`)
+        .join(", ");
+      parts.push(`(${summary})`);
+    }
+    return parts.length > 0 ? parts.join(" ") : null;
+  }, [packetData]);
+
   // Update breadcrumb when item data loads
   useEffect(() => {
     const extractedData = itemHookData.item?.data as
       | ExtractedData<unknown>
       | undefined;
-    const fileName = extractedData?.file_name;
-    if (fileName) {
+    const displayName =
+      packetLabel || extractedData?.file_name || itemId;
+    if (displayName) {
       setBreadcrumbs([
         { label: APP_TITLE, href: "/" },
         {
-          label: fileName,
+          label: displayName,
           isCurrentPage: true,
         },
       ]);
@@ -196,7 +223,7 @@ export default function ItemPage() {
     return () => {
       setBreadcrumbs([{ label: APP_TITLE, href: "/" }]);
     };
-  }, [itemHookData.item?.data, setBreadcrumbs]);
+  }, [itemHookData.item?.data, packetLabel, setBreadcrumbs]);
 
   const {
     item: itemData,
