@@ -6,6 +6,7 @@ from workflows.events import StartEvent, StopEvent
 from workflows.resource import ResourceConfig
 
 from .config import EXTRACTED_DATA_COLLECTION, JsonSchema
+from .schemas import ClaimsPacketOutput
 
 
 class MetadataResponse(StopEvent):
@@ -14,6 +15,11 @@ class MetadataResponse(StopEvent):
     # For multi-schema workflows: individual schemas by document type
     schemas: dict[str, dict[str, Any]] | None = None
     discriminator_field: str | None = None
+
+
+# Generate the JSON schema from the ClaimsPacketOutput Pydantic model.
+# This tells the UI what the data structure looks like.
+PACKET_SCHEMA = ClaimsPacketOutput.model_json_schema()
 
 
 class MetadataWorkflow(Workflow):
@@ -34,8 +40,11 @@ class MetadataWorkflow(Workflow):
         ],
     ) -> MetadataResponse:
         """Return the data schema and storage settings for the review interface."""
-        schema_dict = extraction_schema.to_dict()
-        json_schema = jsonref.replace_refs(schema_dict, proxies=False)
+        # Use the ClaimsPacketOutput schema so the UI understands the full
+        # packet structure (patient, documents, validation results, financials).
+        # The extraction_schema from config is still loaded as a resource
+        # (required by ResourceConfig), but we return the packet schema instead.
+        json_schema = jsonref.replace_refs(PACKET_SCHEMA, proxies=False)
         return MetadataResponse(
             json_schema=json_schema,
             extracted_data_collection=EXTRACTED_DATA_COLLECTION,

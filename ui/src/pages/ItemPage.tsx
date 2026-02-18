@@ -17,12 +17,13 @@ import { APP_TITLE } from "@/lib/config";
 import { downloadExtractedDataItem } from "@/lib/export";
 import { useMetadataContext } from "@/lib/MetadataProvider";
 import { convertBoundingBoxesToHighlights } from "@/lib/utils";
+import {
+  PacketSummaryView,
+  isClaimsPacket,
+} from "@/components/PacketSummaryView";
 
 /**
  * Select the appropriate schema based on the discriminator field value.
- * If multiple schemas are provided and the item has a discriminator value,
- * use the type-specific schema for a focused editing experience.
- * Otherwise, fall back to the union schema.
  */
 function selectSchemaForItem(
   metadata: {
@@ -34,22 +35,16 @@ function selectSchemaForItem(
 ): any {
   const { schemas, discriminator_field, json_schema } = metadata;
 
-  // If no discriminator support, use the union schema
   if (!schemas || !discriminator_field) {
     return json_schema;
   }
 
-  // Get the discriminator value from the extracted data
-  // item.data contains wrapper fields (status, file_id, etc.)
-  // item.data.data contains the actual extracted fields including the discriminator
   const discriminatorValue = itemData?.data?.data?.[discriminator_field];
 
-  // If we have a valid discriminator value and a matching schema, use it
   if (discriminatorValue && schemas[discriminatorValue]) {
     return schemas[discriminatorValue];
   }
 
-  // Fall back to the union schema
   return json_schema;
 }
 
@@ -58,25 +53,30 @@ export default function ItemPage() {
   const { setButtons, setBreadcrumbs } = useToolbar();
   const [highlight, setHighlight] = useState<Highlight | undefined>(undefined);
   const { metadata } = useMetadataContext();
-  // Use the hook to fetch item data
+  const navigate = useNavigate();
+
   const itemHookData = useItemData<any>({
-    // order/remove fields as needed here
     jsonSchema: modifyJsonSchema(metadata.json_schema, {}),
     itemId: itemId as string,
     isMock: false,
   });
 
-  // Select the appropriate schema based on discriminator field
   const selectedSchema = useMemo(() => {
     return selectSchemaForItem(metadata, itemHookData.item);
   }, [metadata, itemHookData.item]);
 
-  // Modify the selected schema for display
   const displaySchema = useMemo(() => {
     return modifyJsonSchema(selectedSchema, {});
   }, [selectedSchema]);
 
-  const navigate = useNavigate();
+  // Detect if this is a claims packet or a single-document extraction
+  const packetData = useMemo(() => {
+    const innerData = itemHookData.item?.data?.data;
+    if (isClaimsPacket(innerData)) {
+      return innerData;
+    }
+    return null;
+  }, [itemHookData.item]);
 
   // Update breadcrumb when item data loads
   useEffect(() => {
@@ -95,10 +95,16 @@ export default function ItemPage() {
     }
 
     return () => {
-      // Reset to default breadcrumb when leaving the page
       setBreadcrumbs([{ label: APP_TITLE, href: "/" }]);
     };
   }, [itemHookData.item?.data, setBreadcrumbs]);
+
+  const {
+    item: itemData,
+    updateData,
+    loading: isLoading,
+    error,
+  } = itemHookData;
 
   useEffect(() => {
     setButtons(() => [
@@ -126,13 +132,6 @@ export default function ItemPage() {
     };
   }, [itemHookData.data, setButtons]);
 
-  const {
-    item: itemData,
-    updateData,
-    loading: isLoading,
-    error,
-  } = itemHookData;
-
   if (isLoading) {
     return (
       <div className="flex h-screen items-center justify-center">
@@ -157,7 +156,44 @@ export default function ItemPage() {
     );
   }
 
-  // Cast itemData.data to ExtractedData for proper typing
+  // --- Claims Packet View ---
+  if (packetData) {
+    const extractedData = itemData.data as ExtractedData<any>;
+    const fileId = extractedData.file_id;
+
+    return (
+      <div className="flex h-full bg-gray-50">
+        {/* Left Side - File Preview (shows first document) */}
+        <div className="w-2/5 border-r h-full border-gray-200 bg-white overflow-hidden">
+          {fileId ? (
+            <FilePreview
+              fileId={fileId}
+              onBoundingBoxClick={(box, pageNumber) => {
+                console.log(
+                  "Bounding box clicked:",
+                  box,
+                  "on page:",
+                  pageNumber,
+                );
+              }}
+              highlight={highlight}
+            />
+          ) : (
+            <div className="flex items-center justify-center h-full text-gray-400 text-sm">
+              No file preview available
+            </div>
+          )}
+        </div>
+
+        {/* Right Side - Packet Summary */}
+        <div className="flex-1 bg-gray-50 h-full overflow-y-auto">
+          <PacketSummaryView data={packetData} />
+        </div>
+      </div>
+    );
+  }
+
+  // --- Standard Single-Document View (fallback) ---
   const extractedData = itemData.data as ExtractedData<any>;
   const fileId = extractedData.file_id;
 
@@ -169,7 +205,12 @@ export default function ItemPage() {
           <FilePreview
             fileId={fileId}
             onBoundingBoxClick={(box, pageNumber) => {
-              console.log("Bounding box clicked:", box, "on page:", pageNumber);
+              console.log(
+                "Bounding box clicked:",
+                box,
+                "on page:",
+                pageNumber,
+              );
             }}
             highlight={highlight}
           />
@@ -179,7 +220,6 @@ export default function ItemPage() {
       {/* Right Side - Review Panel */}
       <div className="flex-1 bg-white h-full overflow-y-auto">
         <div className="p-4 space-y-4">
-          {/* Extracted Data */}
           <ExtractedDataDisplay<any>
             extractedData={extractedData}
             title="Extracted Data"
