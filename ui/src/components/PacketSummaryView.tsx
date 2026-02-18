@@ -14,6 +14,113 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
+/**
+ * Lightweight markdown-to-HTML converter for rendering LLM narrative output.
+ * Handles: headers, bold, italic, numbered lists, bullet lists, paragraphs.
+ */
+function renderMarkdown(md: string): string {
+  // Escape HTML entities
+  let html = md
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+
+  // Split into lines for block-level processing
+  const lines = html.split("\n");
+  const output: string[] = [];
+  let inUl = false;
+  let inOl = false;
+
+  for (let i = 0; i < lines.length; i++) {
+    let line = lines[i];
+
+    // Close open lists if this line isn't a list item
+    const isBullet = /^\s*[-*]\s+/.test(line);
+    const isNumbered = /^\s*\d+[.)]\s+/.test(line);
+
+    if (!isBullet && inUl) {
+      output.push("</ul>");
+      inUl = false;
+    }
+    if (!isNumbered && inOl) {
+      output.push("</ol>");
+      inOl = false;
+    }
+
+    // Headers
+    if (/^####\s+(.+)/.test(line)) {
+      const m = line.match(/^####\s+(.+)/);
+      output.push(`<h4 class="text-sm font-semibold text-gray-800 mt-3 mb-1">${m![1]}</h4>`);
+      continue;
+    }
+    if (/^###\s+(.+)/.test(line)) {
+      const m = line.match(/^###\s+(.+)/);
+      output.push(`<h3 class="text-base font-semibold text-gray-900 mt-4 mb-1">${m![1]}</h3>`);
+      continue;
+    }
+    if (/^##\s+(.+)/.test(line)) {
+      const m = line.match(/^##\s+(.+)/);
+      output.push(`<h2 class="text-lg font-semibold text-gray-900 mt-4 mb-1">${m![1]}</h2>`);
+      continue;
+    }
+    if (/^#\s+(.+)/.test(line)) {
+      const m = line.match(/^#\s+(.+)/);
+      output.push(`<h1 class="text-xl font-bold text-gray-900 mt-4 mb-1">${m![1]}</h1>`);
+      continue;
+    }
+
+    // Bullet list items
+    if (isBullet) {
+      if (!inUl) {
+        output.push('<ul class="list-disc pl-5 space-y-1 my-2">');
+        inUl = true;
+      }
+      const content = line.replace(/^\s*[-*]\s+/, "");
+      output.push(`<li>${applyInline(content)}</li>`);
+      continue;
+    }
+
+    // Numbered list items
+    if (isNumbered) {
+      if (!inOl) {
+        output.push('<ol class="list-decimal pl-5 space-y-1 my-2">');
+        inOl = true;
+      }
+      const content = line.replace(/^\s*\d+[.)]\s+/, "");
+      output.push(`<li>${applyInline(content)}</li>`);
+      continue;
+    }
+
+    // Blank lines become paragraph breaks
+    if (line.trim() === "") {
+      output.push('<div class="h-2"></div>');
+      continue;
+    }
+
+    // Regular paragraph line
+    output.push(`<p class="my-1">${applyInline(line)}</p>`);
+  }
+
+  // Close any open lists
+  if (inUl) output.push("</ul>");
+  if (inOl) output.push("</ol>");
+
+  return output.join("\n");
+}
+
+/** Apply inline markdown: bold, italic, inline code */
+function applyInline(text: string): string {
+  return text
+    // Bold + italic: ***text***
+    .replace(/\*\*\*(.+?)\*\*\*/g, '<strong><em>$1</em></strong>')
+    // Bold: **text**
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    // Italic: *text*
+    .replace(/\*(.+?)\*/g, '<em>$1</em>')
+    // Inline code: `text`
+    .replace(/`(.+?)`/g, '<code class="bg-gray-100 px-1 py-0.5 rounded text-xs">$1</code>');
+}
+
 // --- Types matching the Python ClaimsPacketOutput ---
 
 interface PatientInfo {
@@ -347,9 +454,10 @@ export function PacketSummaryView({ data }: { data: ClaimsPacketData }) {
           icon={ClipboardList}
           defaultOpen={true}
         >
-          <div className="prose prose-sm max-w-none mt-3 text-gray-700 whitespace-pre-wrap leading-relaxed">
-            {summary_narrative}
-          </div>
+          <div
+            className="prose prose-sm max-w-none mt-3 text-gray-700 leading-relaxed"
+            dangerouslySetInnerHTML={{ __html: renderMarkdown(summary_narrative) }}
+          />
         </CollapsibleSection>
       )}
 
