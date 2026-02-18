@@ -55,8 +55,7 @@ function TaskList() {
             contentHash={{ enabled: true }}
             customWorkflowInput={(files) => {
               return {
-                file_id: files[0].fileId,
-                file_hash: files[0].contentHash ?? null,
+                file_ids: files.map((file) => file.fileId),
               };
             }}
             onSuccess={(handler) => {
