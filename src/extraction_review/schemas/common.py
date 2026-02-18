@@ -83,6 +83,7 @@ class DocumentEnvelope(BaseModel):
     """Metadata wrapper for a processed document."""
 
     doc_id: str
+    file_id: str | None = None
     filename: str
     classified_type: DocumentType
     classification_confidence: float

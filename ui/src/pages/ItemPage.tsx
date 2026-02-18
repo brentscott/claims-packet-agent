@@ -8,7 +8,14 @@ import {
   type ExtractedData,
   Button,
 } from "@llamaindex/ui";
-import { Clock, XCircle, Download } from "lucide-react";
+import {
+  Clock,
+  XCircle,
+  Download,
+  ChevronLeft,
+  ChevronRight,
+  FileText,
+} from "lucide-react";
 import { useParams } from "react-router-dom";
 import { useToolbar } from "@/lib/ToolbarContext";
 import { useNavigate } from "react-router-dom";
@@ -20,7 +27,9 @@ import { convertBoundingBoxesToHighlights } from "@/lib/utils";
 import {
   PacketSummaryView,
   isClaimsPacket,
+  type ClaimsPacketData,
 } from "@/components/PacketSummaryView";
+import { cn } from "@/lib/utils";
 
 /**
  * Select the appropriate schema based on the discriminator field value.
@@ -48,10 +57,94 @@ function selectSchemaForItem(
   return json_schema;
 }
 
+/**
+ * Extract file_ids from packet documents for the file navigator.
+ * Returns array of {file_id, filename, doc_type} for each document that has a file_id.
+ */
+function getPacketFileList(
+  packetData: ClaimsPacketData,
+): Array<{ file_id: string; filename: string; doc_type: string }> {
+  return packetData.documents
+    .filter((doc) => doc.envelope.file_id)
+    .map((doc) => ({
+      file_id: doc.envelope.file_id!,
+      filename: doc.envelope.filename,
+      doc_type: doc.envelope.classified_type,
+    }));
+}
+
+/**
+ * File navigator for multi-document packets.
+ * Shows tabs/buttons for each file so users can page through all uploaded documents.
+ */
+function FileNavigator({
+  files,
+  activeIndex,
+  onChange,
+}: {
+  files: Array<{ file_id: string; filename: string; doc_type: string }>;
+  activeIndex: number;
+  onChange: (index: number) => void;
+}) {
+  if (files.length <= 1) return null;
+
+  return (
+    <div className="border-b border-gray-200 bg-gray-50 px-2 py-2">
+      <div className="flex items-center gap-1">
+        <button
+          onClick={() => onChange(Math.max(0, activeIndex - 1))}
+          disabled={activeIndex === 0}
+          className="p-1 rounded hover:bg-gray-200 disabled:opacity-30 disabled:cursor-not-allowed"
+          aria-label="Previous document"
+        >
+          <ChevronLeft className="h-4 w-4" />
+        </button>
+
+        <div className="flex-1 overflow-x-auto">
+          <div className="flex gap-1">
+            {files.map((file, i) => (
+              <button
+                key={file.file_id}
+                onClick={() => onChange(i)}
+                className={cn(
+                  "flex items-center gap-1.5 px-2.5 py-1.5 rounded text-xs whitespace-nowrap transition-colors",
+                  i === activeIndex
+                    ? "bg-white shadow-sm border border-gray-200 text-gray-900 font-medium"
+                    : "text-gray-600 hover:bg-gray-200 hover:text-gray-900",
+                )}
+                title={`${file.filename} (${file.doc_type})`}
+              >
+                <FileText className="h-3 w-3 shrink-0" />
+                <span className="truncate max-w-[120px]">{file.filename}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <button
+          onClick={() =>
+            onChange(Math.min(files.length - 1, activeIndex + 1))
+          }
+          disabled={activeIndex === files.length - 1}
+          className="p-1 rounded hover:bg-gray-200 disabled:opacity-30 disabled:cursor-not-allowed"
+          aria-label="Next document"
+        >
+          <ChevronRight className="h-4 w-4" />
+        </button>
+      </div>
+
+      <div className="text-center text-xs text-gray-400 mt-1">
+        {activeIndex + 1} of {files.length} documents
+      </div>
+    </div>
+  );
+}
+
 export default function ItemPage() {
   const { itemId } = useParams<{ itemId: string }>();
   const { setButtons, setBreadcrumbs } = useToolbar();
   const [highlight, setHighlight] = useState<Highlight | undefined>(undefined);
+  const [activeFileIndex, setActiveFileIndex] = useState(0);
   const { metadata } = useMetadataContext();
   const navigate = useNavigate();
 
@@ -77,6 +170,12 @@ export default function ItemPage() {
     }
     return null;
   }, [itemHookData.item]);
+
+  // Get list of files available for preview in packet mode
+  const packetFiles = useMemo(() => {
+    if (!packetData) return [];
+    return getPacketFileList(packetData);
+  }, [packetData]);
 
   // Update breadcrumb when item data loads
   useEffect(() => {
@@ -158,31 +257,49 @@ export default function ItemPage() {
 
   // --- Claims Packet View ---
   if (packetData) {
-    const extractedData = itemData.data as ExtractedData<any>;
-    const fileId = extractedData.file_id;
+    // Determine which file to show in the preview
+    const activeFileId =
+      packetFiles.length > 0
+        ? packetFiles[Math.min(activeFileIndex, packetFiles.length - 1)]
+            ?.file_id
+        : (itemData.data as ExtractedData<any>).file_id;
 
     return (
       <div className="flex h-full bg-gray-50">
-        {/* Left Side - File Preview (shows first document) */}
-        <div className="w-2/5 border-r h-full border-gray-200 bg-white overflow-hidden">
-          {fileId ? (
-            <FilePreview
-              fileId={fileId}
-              onBoundingBoxClick={(box, pageNumber) => {
-                console.log(
-                  "Bounding box clicked:",
-                  box,
-                  "on page:",
-                  pageNumber,
-                );
-              }}
-              highlight={highlight}
-            />
-          ) : (
-            <div className="flex items-center justify-center h-full text-gray-400 text-sm">
-              No file preview available
-            </div>
-          )}
+        {/* Left Side - File Preview with Navigator */}
+        <div className="w-2/5 border-r h-full border-gray-200 bg-white flex flex-col overflow-hidden">
+          {/* File navigator tabs */}
+          <FileNavigator
+            files={packetFiles}
+            activeIndex={Math.min(
+              activeFileIndex,
+              Math.max(0, packetFiles.length - 1),
+            )}
+            onChange={setActiveFileIndex}
+          />
+
+          {/* File preview */}
+          <div className="flex-1 overflow-hidden">
+            {activeFileId ? (
+              <FilePreview
+                key={activeFileId}
+                fileId={activeFileId}
+                onBoundingBoxClick={(box, pageNumber) => {
+                  console.log(
+                    "Bounding box clicked:",
+                    box,
+                    "on page:",
+                    pageNumber,
+                  );
+                }}
+                highlight={highlight}
+              />
+            ) : (
+              <div className="flex items-center justify-center h-full text-gray-400 text-sm">
+                No file preview available
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Right Side - Packet Summary */}

@@ -420,6 +420,7 @@ class ClaimsPacketWorkflow(Workflow):
                     ProcessedDocument(
                         envelope=DocumentEnvelope(
                             doc_id=doc_id,
+                            file_id=doc.file_id,
                             filename=doc.filename,
                             classified_type=DocumentType.UNKNOWN,
                             classification_confidence=doc.confidence,
@@ -460,6 +461,7 @@ class ClaimsPacketWorkflow(Workflow):
                 ProcessedDocument(
                     envelope=DocumentEnvelope(
                         doc_id=doc_id,
+                        file_id=doc.file_id,
                         filename=doc.filename,
                         classified_type=doc_type_enum,
                         classification_confidence=doc.confidence,

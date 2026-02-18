@@ -47,6 +47,7 @@ interface FinancialSummary {
 
 interface DocumentEnvelope {
   doc_id: string;
+  file_id?: string | null;
   filename: string;
   classified_type: string;
   classification_confidence: number;
