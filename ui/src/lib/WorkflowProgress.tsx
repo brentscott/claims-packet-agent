@@ -65,7 +65,7 @@ export const WorkflowProgress = ({
   useEffect(() => {
     for (const handler of runningHandlers) {
       if (!subscribed.current[handler.handler_id]) {
-        handlersService.actions(handler.handler_id).subscribeToEvents({
+        subscribed.current[handler.handler_id] = handlersService.actions(handler.handler_id).subscribeToEvents({
           onComplete() {
             subscribed.current[handler.handler_id]?.disconnect();
             delete subscribed.current[handler.handler_id];
