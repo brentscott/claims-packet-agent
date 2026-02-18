@@ -564,8 +564,23 @@ class ClaimsPacketWorkflow(Workflow):
         )
 
         output_dict = output.model_dump(mode="json")
+
+        # Get filenames for display
+        filenames = [doc.envelope.filename for doc in state.extracted_docs]
+        display_name = (
+            filenames[0] if len(filenames) == 1 else f"{state.packet_id} ({len(filenames)} files)"
+        )
+
+        # Wrap output in the format expected by the UI
+        wrapped_output = {
+            "data": output_dict,
+            "file_name": display_name,
+            "file_id": state.file_ids[0] if state.file_ids else None,
+            "status": "pending_review",
+        }
+
         await llama_cloud.beta.agent_data.agent_data(
-            data=output_dict,
+            data=wrapped_output,
             deployment_name=agent_name or "_public",
             collection=EXTRACTED_DATA_COLLECTION,
         )
