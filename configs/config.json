@@ -1,23 +1,514 @@
 {
+  "extract-eob": {
+    "json_schema": {
+      "type": "object",
+      "properties": {
+        "claim_number": {
+          "type": ["string", "null"],
+          "description": "Payer-assigned claim number"
+        },
+        "document_date": {
+          "type": ["string", "null"],
+          "format": "date",
+          "description": "Date the EOB was issued"
+        },
+        "patient": {
+          "type": "object",
+          "properties": {
+            "first_name": { "type": ["string", "null"], "description": "Patient first name" },
+            "last_name": { "type": ["string", "null"], "description": "Patient last name" },
+            "date_of_birth": { "type": ["string", "null"], "format": "date", "description": "Patient date of birth" },
+            "member_id": { "type": ["string", "null"], "description": "Insurance member/subscriber ID" },
+            "group_number": { "type": ["string", "null"], "description": "Insurance group number" },
+            "address": { "type": ["string", "null"], "description": "Patient mailing address" }
+          },
+          "required": ["first_name", "last_name", "date_of_birth", "member_id", "group_number", "address"]
+        },
+        "provider": {
+          "type": "object",
+          "properties": {
+            "name": { "type": ["string", "null"], "description": "Provider or facility name" },
+            "npi": { "type": ["string", "null"], "description": "National Provider Identifier (10 digits)" },
+            "tax_id": { "type": ["string", "null"], "description": "Provider tax ID / EIN" },
+            "address": { "type": ["string", "null"], "description": "Provider address" },
+            "phone": { "type": ["string", "null"], "description": "Provider phone number" }
+          },
+          "required": ["name", "npi", "tax_id", "address", "phone"]
+        },
+        "insurance": {
+          "type": "object",
+          "properties": {
+            "payer_name": { "type": ["string", "null"], "description": "Insurance company name" },
+            "plan_name": { "type": ["string", "null"], "description": "Plan name or product" },
+            "plan_type": { "type": ["string", "null"], "description": "HMO, PPO, EPO, POS, etc." },
+            "policy_number": { "type": ["string", "null"], "description": "Policy number" },
+            "group_number": { "type": ["string", "null"], "description": "Group number" }
+          },
+          "required": ["payer_name", "plan_name", "plan_type", "policy_number", "group_number"]
+        },
+        "date_of_service_start": {
+          "type": ["string", "null"],
+          "format": "date",
+          "description": "Start date of service"
+        },
+        "date_of_service_end": {
+          "type": ["string", "null"],
+          "format": "date",
+          "description": "End date of service"
+        },
+        "place_of_service": {
+          "type": ["string", "null"],
+          "description": "Facility type or place of service"
+        },
+        "line_items": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "service_date": { "type": ["string", "null"], "format": "date", "description": "Date service was performed" },
+              "cpt_code": { "type": ["string", "null"], "description": "CPT/HCPCS procedure code" },
+              "description": { "type": ["string", "null"], "description": "Service description" },
+              "billed_amount": { "type": ["number", "null"], "description": "Amount the provider charged" },
+              "allowed_amount": { "type": ["number", "null"], "description": "Amount the plan allows" },
+              "insurance_paid": { "type": ["number", "null"], "description": "Amount insurance actually paid" },
+              "deductible_applied": { "type": ["number", "null"], "description": "Amount applied to deductible" },
+              "copay": { "type": ["number", "null"], "description": "Copay amount" },
+              "coinsurance": { "type": ["number", "null"], "description": "Coinsurance amount" },
+              "patient_responsibility": { "type": ["number", "null"], "description": "Total patient owes for this line" },
+              "remark_codes": { "type": "array", "items": { "type": "string" }, "description": "Claim adjustment reason codes" },
+              "denial_reason": { "type": ["string", "null"], "description": "Reason if service was denied" }
+            },
+            "required": ["service_date", "cpt_code", "description", "billed_amount", "allowed_amount", "insurance_paid", "deductible_applied", "copay", "coinsurance", "patient_responsibility", "remark_codes", "denial_reason"]
+          },
+          "description": "Individual service line items"
+        },
+        "total_billed": { "type": ["number", "null"], "description": "Total amount billed by provider" },
+        "total_allowed": { "type": ["number", "null"], "description": "Total amount allowed by insurance" },
+        "total_insurance_paid": { "type": ["number", "null"], "description": "Total amount paid by insurance" },
+        "total_patient_responsibility": { "type": ["number", "null"], "description": "Total amount patient owes" },
+        "total_deductible": { "type": ["number", "null"], "description": "Total deductible applied" },
+        "total_copay": { "type": ["number", "null"], "description": "Total copay amount" },
+        "total_coinsurance": { "type": ["number", "null"], "description": "Total coinsurance amount" },
+        "deductible_met_ytd": { "type": ["number", "null"], "description": "Deductible met year-to-date" },
+        "deductible_remaining": { "type": ["number", "null"], "description": "Remaining deductible" },
+        "out_of_pocket_met_ytd": { "type": ["number", "null"], "description": "Out-of-pocket met year-to-date" },
+        "out_of_pocket_max": { "type": ["number", "null"], "description": "Out-of-pocket maximum" },
+        "claim_status": { "type": ["string", "null"], "description": "Claim status: processed, denied, pending, etc." },
+        "appeal_deadline": { "type": ["string", "null"], "format": "date", "description": "Deadline to file an appeal" }
+      },
+      "required": ["claim_number", "document_date", "patient", "provider", "insurance", "date_of_service_start", "date_of_service_end", "place_of_service", "line_items", "total_billed", "total_allowed", "total_insurance_paid", "total_patient_responsibility", "total_deductible", "total_copay", "total_coinsurance", "deductible_met_ytd", "deductible_remaining", "out_of_pocket_met_ytd", "out_of_pocket_max", "claim_status", "appeal_deadline"]
+    },
+    "settings": {
+      "extraction_mode": "PREMIUM",
+      "system_prompt": "Extract all fields from this Explanation of Benefits document. All dollar amounts should be positive numbers. Use null for fields not found.",
+      "citation_bbox": true,
+      "use_reasoning": false,
+      "cite_sources": true,
+      "confidence_scores": true
+    }
+  },
+  "extract-medical-bill": {
+    "json_schema": {
+      "type": "object",
+      "properties": {
+        "account_number": { "type": ["string", "null"], "description": "Patient account number" },
+        "statement_date": { "type": ["string", "null"], "format": "date", "description": "Statement date" },
+        "invoice_number": { "type": ["string", "null"], "description": "Invoice number" },
+        "patient": {
+          "type": "object",
+          "properties": {
+            "first_name": { "type": ["string", "null"], "description": "Patient first name" },
+            "last_name": { "type": ["string", "null"], "description": "Patient last name" },
+            "date_of_birth": { "type": ["string", "null"], "format": "date", "description": "Patient date of birth" },
+            "member_id": { "type": ["string", "null"], "description": "Insurance member ID" },
+            "group_number": { "type": ["string", "null"], "description": "Insurance group number" },
+            "address": { "type": ["string", "null"], "description": "Patient address" }
+          },
+          "required": ["first_name", "last_name", "date_of_birth", "member_id", "group_number", "address"]
+        },
+        "provider": {
+          "type": "object",
+          "properties": {
+            "name": { "type": ["string", "null"], "description": "Provider name" },
+            "npi": { "type": ["string", "null"], "description": "National Provider Identifier" },
+            "tax_id": { "type": ["string", "null"], "description": "Provider tax ID" },
+            "address": { "type": ["string", "null"], "description": "Provider address" },
+            "phone": { "type": ["string", "null"], "description": "Provider phone" }
+          },
+          "required": ["name", "npi", "tax_id", "address", "phone"]
+        },
+        "date_of_service_start": { "type": ["string", "null"], "format": "date", "description": "Service start date" },
+        "date_of_service_end": { "type": ["string", "null"], "format": "date", "description": "Service end date" },
+        "line_items": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "service_date": { "type": ["string", "null"], "format": "date", "description": "Date of service" },
+              "cpt_code": { "type": ["string", "null"], "description": "CPT code" },
+              "description": { "type": ["string", "null"], "description": "Service description" },
+              "quantity": { "type": ["integer", "null"], "description": "Quantity" },
+              "unit_price": { "type": ["number", "null"], "description": "Unit price" },
+              "amount": { "type": ["number", "null"], "description": "Total charge for this line" }
+            },
+            "required": ["service_date", "cpt_code", "description", "quantity", "unit_price", "amount"]
+          },
+          "description": "Itemized charges"
+        },
+        "total_charges": { "type": ["number", "null"], "description": "Total charges before adjustments" },
+        "insurance_adjustments": { "type": ["number", "null"], "description": "Adjustments from insurance (positive number)" },
+        "insurance_payments": { "type": ["number", "null"], "description": "Payments from insurance" },
+        "patient_payments": { "type": ["number", "null"], "description": "Payments already made by patient" },
+        "balance_due": { "type": ["number", "null"], "description": "Current balance patient owes" },
+        "due_date": { "type": ["string", "null"], "format": "date", "description": "Payment due date" },
+        "payment_plan_available": { "type": ["boolean", "null"], "description": "Whether payment plan is available" },
+        "financial_assistance_note": { "type": ["string", "null"], "description": "Financial assistance information" }
+      },
+      "required": ["account_number", "statement_date", "invoice_number", "patient", "provider", "date_of_service_start", "date_of_service_end", "line_items", "total_charges", "insurance_adjustments", "insurance_payments", "patient_payments", "balance_due", "due_date", "payment_plan_available", "financial_assistance_note"]
+    },
+    "settings": {
+      "extraction_mode": "PREMIUM",
+      "system_prompt": "Extract all fields from this medical bill. All dollar amounts should be positive numbers (e.g. 445.00 not -445.00) — adjustments and discounts are inherently reductions, so the sign is implied by the field name. Use null for fields not found.",
+      "citation_bbox": true,
+      "use_reasoning": false,
+      "cite_sources": true,
+      "confidence_scores": true
+    }
+  },
+  "extract-cms1500": {
+    "json_schema": {
+      "type": "object",
+      "properties": {
+        "payer_type": { "type": ["string", "null"], "description": "Box 1: Medicare, Medicaid, Group, etc." },
+        "patient": {
+          "type": "object",
+          "properties": {
+            "first_name": { "type": ["string", "null"], "description": "Patient first name" },
+            "last_name": { "type": ["string", "null"], "description": "Patient last name" },
+            "date_of_birth": { "type": ["string", "null"], "format": "date", "description": "Patient date of birth" },
+            "member_id": { "type": ["string", "null"], "description": "Insurance member ID" },
+            "group_number": { "type": ["string", "null"], "description": "Group number" },
+            "address": { "type": ["string", "null"], "description": "Patient address" }
+          },
+          "required": ["first_name", "last_name", "date_of_birth", "member_id", "group_number", "address"]
+        },
+        "insured": {
+          "type": "object",
+          "properties": {
+            "first_name": { "type": ["string", "null"], "description": "Insured first name" },
+            "last_name": { "type": ["string", "null"], "description": "Insured last name" },
+            "date_of_birth": { "type": ["string", "null"], "format": "date", "description": "Insured date of birth" },
+            "member_id": { "type": ["string", "null"], "description": "Member ID" },
+            "group_number": { "type": ["string", "null"], "description": "Group number" },
+            "address": { "type": ["string", "null"], "description": "Insured address" }
+          },
+          "required": ["first_name", "last_name", "date_of_birth", "member_id", "group_number", "address"]
+        },
+        "provider": {
+          "type": "object",
+          "properties": {
+            "name": { "type": ["string", "null"], "description": "Billing provider name (Box 33)" },
+            "npi": { "type": ["string", "null"], "description": "Provider NPI" },
+            "tax_id": { "type": ["string", "null"], "description": "Provider tax ID" },
+            "address": { "type": ["string", "null"], "description": "Provider address" },
+            "phone": { "type": ["string", "null"], "description": "Provider phone" }
+          },
+          "required": ["name", "npi", "tax_id", "address", "phone"]
+        },
+        "referring_provider": {
+          "type": ["object", "null"],
+          "properties": {
+            "name": { "type": ["string", "null"], "description": "Referring provider name (Box 17)" },
+            "npi": { "type": ["string", "null"], "description": "Referring provider NPI" },
+            "tax_id": { "type": ["string", "null"], "description": "Tax ID" },
+            "address": { "type": ["string", "null"], "description": "Address" },
+            "phone": { "type": ["string", "null"], "description": "Phone" }
+          },
+          "required": ["name", "npi", "tax_id", "address", "phone"]
+        },
+        "insurance": {
+          "type": "object",
+          "properties": {
+            "payer_name": { "type": ["string", "null"], "description": "Insurance company name" },
+            "plan_name": { "type": ["string", "null"], "description": "Plan name" },
+            "plan_type": { "type": ["string", "null"], "description": "Plan type" },
+            "policy_number": { "type": ["string", "null"], "description": "Policy number" },
+            "group_number": { "type": ["string", "null"], "description": "Group number" }
+          },
+          "required": ["payer_name", "plan_name", "plan_type", "policy_number", "group_number"]
+        },
+        "patient_account_number": { "type": ["string", "null"], "description": "Box 26: Patient account number" },
+        "accept_assignment": { "type": ["boolean", "null"], "description": "Box 27: Accept assignment" },
+        "prior_authorization": { "type": ["string", "null"], "description": "Box 23: Prior authorization number" },
+        "diagnosis_codes": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "pointer": { "type": "string", "description": "Diagnosis pointer letter (A, B, C, etc.)" },
+              "icd10_code": { "type": "string", "description": "ICD-10-CM code" },
+              "description": { "type": ["string", "null"], "description": "Diagnosis description" }
+            },
+            "required": ["pointer", "icd10_code", "description"]
+          },
+          "description": "Box 21: Diagnosis codes"
+        },
+        "service_lines": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "date_of_service_from": { "type": ["string", "null"], "format": "date", "description": "Box 24A: From date" },
+              "date_of_service_to": { "type": ["string", "null"], "format": "date", "description": "Box 24A: To date" },
+              "place_of_service": { "type": ["string", "null"], "description": "Box 24B: Place of service code" },
+              "cpt_code": { "type": ["string", "null"], "description": "Box 24D: CPT/HCPCS code" },
+              "modifier_1": { "type": ["string", "null"], "description": "Box 24D: Modifier 1" },
+              "modifier_2": { "type": ["string", "null"], "description": "Box 24D: Modifier 2" },
+              "diagnosis_pointer": { "type": ["string", "null"], "description": "Box 24E: Diagnosis pointer" },
+              "charges": { "type": ["number", "null"], "description": "Box 24F: Charges" },
+              "units": { "type": ["integer", "null"], "description": "Box 24G: Days or units" },
+              "rendering_provider_npi": { "type": ["string", "null"], "description": "Box 24J: Rendering provider NPI" }
+            },
+            "required": ["date_of_service_from", "date_of_service_to", "place_of_service", "cpt_code", "modifier_1", "modifier_2", "diagnosis_pointer", "charges", "units", "rendering_provider_npi"]
+          },
+          "description": "Box 24: Service lines"
+        },
+        "total_charge": { "type": ["number", "null"], "description": "Box 28: Total charge" },
+        "amount_paid": { "type": ["number", "null"], "description": "Box 29: Amount paid" },
+        "balance_due": { "type": ["number", "null"], "description": "Box 30: Balance due" },
+        "patient_signature_date": { "type": ["string", "null"], "format": "date", "description": "Box 12: Patient signature date" },
+        "physician_signature_date": { "type": ["string", "null"], "format": "date", "description": "Box 31: Physician signature date" }
+      },
+      "required": ["payer_type", "patient", "insured", "provider", "referring_provider", "insurance", "patient_account_number", "accept_assignment", "prior_authorization", "diagnosis_codes", "service_lines", "total_charge", "amount_paid", "balance_due", "patient_signature_date", "physician_signature_date"]
+    },
+    "settings": {
+      "extraction_mode": "PREMIUM",
+      "system_prompt": "Extract all fields from this CMS-1500 professional claim form. Pay attention to the numbered boxes. All dollar amounts should be positive numbers. Use null for fields not found.",
+      "citation_bbox": true,
+      "use_reasoning": false,
+      "cite_sources": true,
+      "confidence_scores": true
+    }
+  },
+  "extract-ub04": {
+    "json_schema": {
+      "type": "object",
+      "properties": {
+        "facility_name": { "type": ["string", "null"], "description": "FL 1: Facility name" },
+        "facility_address": { "type": ["string", "null"], "description": "FL 1: Facility address" },
+        "facility_type": { "type": ["string", "null"], "description": "FL 4: Facility type code" },
+        "federal_tax_id": { "type": ["string", "null"], "description": "FL 5: Federal tax ID" },
+        "patient": {
+          "type": "object",
+          "properties": {
+            "first_name": { "type": ["string", "null"], "description": "Patient first name" },
+            "last_name": { "type": ["string", "null"], "description": "Patient last name" },
+            "date_of_birth": { "type": ["string", "null"], "format": "date", "description": "Patient date of birth" },
+            "member_id": { "type": ["string", "null"], "description": "Insurance member ID" },
+            "group_number": { "type": ["string", "null"], "description": "Group number" },
+            "address": { "type": ["string", "null"], "description": "Patient address" }
+          },
+          "required": ["first_name", "last_name", "date_of_birth", "member_id", "group_number", "address"]
+        },
+        "insurance": {
+          "type": "object",
+          "properties": {
+            "payer_name": { "type": ["string", "null"], "description": "Insurance company name" },
+            "plan_name": { "type": ["string", "null"], "description": "Plan name" },
+            "plan_type": { "type": ["string", "null"], "description": "Plan type" },
+            "policy_number": { "type": ["string", "null"], "description": "Policy number" },
+            "group_number": { "type": ["string", "null"], "description": "Group number" }
+          },
+          "required": ["payer_name", "plan_name", "plan_type", "policy_number", "group_number"]
+        },
+        "admission_date": { "type": ["string", "null"], "format": "date", "description": "FL 12: Admission date" },
+        "admission_type": { "type": ["string", "null"], "description": "FL 14: Admission type (1=emergency, 2=urgent, etc.)" },
+        "discharge_date": { "type": ["string", "null"], "format": "date", "description": "FL 16: Discharge date" },
+        "discharge_status": { "type": ["string", "null"], "description": "FL 17: Patient discharge status" },
+        "admission_diagnosis": { "type": ["string", "null"], "description": "FL 69: Admission diagnosis (ICD-10)" },
+        "principal_diagnosis": { "type": ["string", "null"], "description": "FL 67: Principal diagnosis" },
+        "other_diagnoses": { "type": "array", "items": { "type": "string" }, "description": "FL 67A-Q: Other diagnosis codes" },
+        "principal_procedure": { "type": ["string", "null"], "description": "FL 74: Principal procedure (ICD-10-PCS)" },
+        "procedure_date": { "type": ["string", "null"], "format": "date", "description": "FL 74: Procedure date" },
+        "revenue_lines": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "revenue_code": { "type": ["string", "null"], "description": "FL 42: Revenue code" },
+              "description": { "type": ["string", "null"], "description": "FL 43: Description" },
+              "hcpcs_code": { "type": ["string", "null"], "description": "FL 44: HCPCS/CPT code" },
+              "service_date": { "type": ["string", "null"], "format": "date", "description": "FL 45: Service date" },
+              "units": { "type": ["integer", "null"], "description": "FL 46: Service units" },
+              "total_charges": { "type": ["number", "null"], "description": "FL 47: Total charges" },
+              "non_covered_charges": { "type": ["number", "null"], "description": "FL 48: Non-covered charges" }
+            },
+            "required": ["revenue_code", "description", "hcpcs_code", "service_date", "units", "total_charges", "non_covered_charges"]
+          },
+          "description": "Revenue code lines"
+        },
+        "total_charges": { "type": ["number", "null"], "description": "FL 47 total: Total charges" },
+        "total_non_covered": { "type": ["number", "null"], "description": "FL 48 total: Total non-covered" },
+        "estimated_amount_due": { "type": ["number", "null"], "description": "FL 55: Estimated amount due from patient" },
+        "provider": {
+          "type": "object",
+          "properties": {
+            "name": { "type": ["string", "null"], "description": "Provider name" },
+            "npi": { "type": ["string", "null"], "description": "Provider NPI" },
+            "tax_id": { "type": ["string", "null"], "description": "Provider tax ID" },
+            "address": { "type": ["string", "null"], "description": "Provider address" },
+            "phone": { "type": ["string", "null"], "description": "Provider phone" }
+          },
+          "required": ["name", "npi", "tax_id", "address", "phone"]
+        },
+        "attending_physician_npi": { "type": ["string", "null"], "description": "FL 76: Attending physician NPI" }
+      },
+      "required": ["facility_name", "facility_address", "facility_type", "federal_tax_id", "patient", "insurance", "admission_date", "admission_type", "discharge_date", "discharge_status", "admission_diagnosis", "principal_diagnosis", "other_diagnoses", "principal_procedure", "procedure_date", "revenue_lines", "total_charges", "total_non_covered", "estimated_amount_due", "provider", "attending_physician_npi"]
+    },
+    "settings": {
+      "extraction_mode": "PREMIUM",
+      "system_prompt": "Extract all fields from this UB-04 institutional claim form. Pay attention to form locators (FL). All dollar amounts should be positive numbers. Use null for fields not found.",
+      "citation_bbox": true,
+      "use_reasoning": false,
+      "cite_sources": true,
+      "confidence_scores": true
+    }
+  },
+  "extract-pharmacy": {
+    "json_schema": {
+      "type": "object",
+      "properties": {
+        "pharmacy_name": { "type": ["string", "null"], "description": "Pharmacy name" },
+        "pharmacy_address": { "type": ["string", "null"], "description": "Pharmacy address" },
+        "pharmacy_phone": { "type": ["string", "null"], "description": "Pharmacy phone number" },
+        "pharmacy_npi": { "type": ["string", "null"], "description": "Pharmacy NPI" },
+        "patient": {
+          "type": "object",
+          "properties": {
+            "first_name": { "type": ["string", "null"], "description": "Patient first name" },
+            "last_name": { "type": ["string", "null"], "description": "Patient last name" },
+            "date_of_birth": { "type": ["string", "null"], "format": "date", "description": "Patient date of birth" },
+            "member_id": { "type": ["string", "null"], "description": "Insurance member ID" },
+            "group_number": { "type": ["string", "null"], "description": "Insurance group number" },
+            "address": { "type": ["string", "null"], "description": "Patient address" }
+          },
+          "required": ["first_name", "last_name", "date_of_birth", "member_id", "group_number", "address"]
+        },
+        "rx_number": { "type": ["string", "null"], "description": "Prescription number" },
+        "fill_date": { "type": ["string", "null"], "format": "date", "description": "Date prescription was filled" },
+        "medication_name": { "type": ["string", "null"], "description": "Brand or generic medication name" },
+        "ndc_code": { "type": ["string", "null"], "description": "National Drug Code" },
+        "quantity": { "type": ["number", "null"], "description": "Quantity dispensed" },
+        "days_supply": { "type": ["integer", "null"], "description": "Days supply" },
+        "prescriber_name": { "type": ["string", "null"], "description": "Prescriber/physician name" },
+        "prescriber_npi": { "type": ["string", "null"], "description": "Prescriber NPI" },
+        "drug_cost": { "type": ["number", "null"], "description": "Total drug cost before insurance" },
+        "insurance_paid": { "type": ["number", "null"], "description": "Amount paid by insurance" },
+        "patient_copay": { "type": ["number", "null"], "description": "Patient copay amount" },
+        "patient_coinsurance": { "type": ["number", "null"], "description": "Patient coinsurance amount" },
+        "deductible_applied": { "type": ["number", "null"], "description": "Amount applied to deductible" },
+        "patient_paid": { "type": ["number", "null"], "description": "Total amount patient paid" },
+        "formulary_tier": { "type": ["string", "null"], "description": "Formulary tier: generic, preferred brand, etc." },
+        "prior_auth_required": { "type": ["boolean", "null"], "description": "Whether prior authorization was required" }
+      },
+      "required": ["pharmacy_name", "pharmacy_address", "pharmacy_phone", "pharmacy_npi", "patient", "rx_number", "fill_date", "medication_name", "ndc_code", "quantity", "days_supply", "prescriber_name", "prescriber_npi", "drug_cost", "insurance_paid", "patient_copay", "patient_coinsurance", "deductible_applied", "patient_paid", "formulary_tier", "prior_auth_required"]
+    },
+    "settings": {
+      "extraction_mode": "PREMIUM",
+      "system_prompt": "Extract all fields from this pharmacy receipt. All dollar amounts should be positive numbers. Use null for fields not found.",
+      "citation_bbox": true,
+      "use_reasoning": false,
+      "cite_sources": true,
+      "confidence_scores": true
+    }
+  },
+  "extract-lab": {
+    "json_schema": {
+      "type": "object",
+      "properties": {
+        "accession_number": { "type": ["string", "null"], "description": "Lab accession number" },
+        "report_date": { "type": ["string", "null"], "format": "date", "description": "Date report was issued" },
+        "patient": {
+          "type": "object",
+          "properties": {
+            "first_name": { "type": ["string", "null"], "description": "Patient first name" },
+            "last_name": { "type": ["string", "null"], "description": "Patient last name" },
+            "date_of_birth": { "type": ["string", "null"], "format": "date", "description": "Patient date of birth" },
+            "member_id": { "type": ["string", "null"], "description": "Insurance member ID" },
+            "group_number": { "type": ["string", "null"], "description": "Insurance group number" },
+            "address": { "type": ["string", "null"], "description": "Patient address" }
+          },
+          "required": ["first_name", "last_name", "date_of_birth", "member_id", "group_number", "address"]
+        },
+        "ordering_provider": {
+          "type": "object",
+          "properties": {
+            "name": { "type": ["string", "null"], "description": "Ordering physician name" },
+            "npi": { "type": ["string", "null"], "description": "Ordering physician NPI" },
+            "tax_id": { "type": ["string", "null"], "description": "Tax ID" },
+            "address": { "type": ["string", "null"], "description": "Address" },
+            "phone": { "type": ["string", "null"], "description": "Phone" }
+          },
+          "required": ["name", "npi", "tax_id", "address", "phone"]
+        },
+        "performing_lab": {
+          "type": "object",
+          "properties": {
+            "name": { "type": ["string", "null"], "description": "Performing laboratory name" },
+            "npi": { "type": ["string", "null"], "description": "Lab NPI" },
+            "tax_id": { "type": ["string", "null"], "description": "Lab tax ID" },
+            "address": { "type": ["string", "null"], "description": "Lab address" },
+            "phone": { "type": ["string", "null"], "description": "Lab phone" }
+          },
+          "required": ["name", "npi", "tax_id", "address", "phone"]
+        },
+        "collection_date": { "type": ["string", "null"], "format": "date", "description": "Date specimen was collected" },
+        "specimen_type": { "type": ["string", "null"], "description": "Type of specimen: blood, urine, etc." },
+        "panel_name": { "type": ["string", "null"], "description": "Test panel name, e.g. Comprehensive Metabolic Panel" },
+        "test_results": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "test_name": { "type": ["string", "null"], "description": "Test name, e.g. Glucose, Fasting" },
+              "cpt_code": { "type": ["string", "null"], "description": "CPT code for the test" },
+              "result_value": { "type": ["string", "null"], "description": "Result value" },
+              "unit": { "type": ["string", "null"], "description": "Unit of measurement" },
+              "reference_range": { "type": ["string", "null"], "description": "Normal reference range" },
+              "flag": { "type": ["string", "null"], "description": "Flag: H=high, L=low, A=abnormal" }
+            },
+            "required": ["test_name", "cpt_code", "result_value", "unit", "reference_range", "flag"]
+          },
+          "description": "Individual test results"
+        },
+        "total_charges": { "type": ["number", "null"], "description": "Total charges for lab work" },
+        "diagnosis_codes": { "type": "array", "items": { "type": "string" }, "description": "ICD-10 diagnosis codes justifying tests" }
+      },
+      "required": ["accession_number", "report_date", "patient", "ordering_provider", "performing_lab", "collection_date", "specimen_type", "panel_name", "test_results", "total_charges", "diagnosis_codes"]
+    },
+    "settings": {
+      "extraction_mode": "PREMIUM",
+      "system_prompt": "Extract all fields from this laboratory report. All dollar amounts should be positive numbers. Use null for fields not found.",
+      "citation_bbox": true,
+      "use_reasoning": false,
+      "cite_sources": true,
+      "confidence_scores": true
+    }
+  },
   "extract": {
     "json_schema": {
       "type": "object",
       "properties": {
         "document_type": {
           "type": "string",
-          "description": "An overarching category for the type of document (e.g. invoice, purchase order, etc.)"
+          "description": "Type of document: EOB, CMS-1500, UB-04, MEDICAL_BILL, PHARMACY_RECEIPT, LAB_REPORT, or UNKNOWN"
         },
         "summary": {
           "type": "string",
           "description": "A 2-3 sentence summary describing the content of the document"
-        },
-        "key_points": {
-          "type": "array",
-          "items": { "type": "string" },
-          "description": "A list of key points or insights from the document"
         }
       },
-      "required": ["document_type", "summary", "key_points"]
+      "required": ["document_type", "summary"]
     },
     "settings": {
       "extraction_mode": "PREMIUM",
@@ -33,8 +524,42 @@
     "settings": {}
   },
   "classify": {
-    "rules": [],
-    "settings": {}
+    "rules": [
+      {
+        "type": "EOB",
+        "description": "Explanation of Benefits from an insurance company showing how a claim was processed, including billed amounts, allowed amounts, insurance payments, and patient responsibility."
+      },
+      {
+        "type": "CMS-1500",
+        "description": "Professional claim form (CMS-1500/HCFA-1500) used by physicians and suppliers, with numbered boxes for patient, provider, diagnosis codes, and service lines."
+      },
+      {
+        "type": "UB-04",
+        "description": "Institutional claim form (UB-04/CMS-1450) used by hospitals and facilities, with revenue codes, condition codes, and occurrence codes."
+      },
+      {
+        "type": "MEDICAL_BILL",
+        "description": "Provider bill or patient statement showing charges, adjustments, payments, and balance due. May include account number and payment options."
+      },
+      {
+        "type": "PHARMACY_RECEIPT",
+        "description": "Pharmacy prescription receipt showing medication name, NDC code, quantity, days supply, and cost breakdown including copay."
+      },
+      {
+        "type": "LAB_REPORT",
+        "description": "Laboratory test results report showing test names, values, units, reference ranges, and flags for abnormal results."
+      },
+      {
+        "type": "UNKNOWN",
+        "description": "Document that does not match any of the above healthcare document types."
+      }
+    ],
+    "settings": {
+      "mode": "FAST",
+      "parsing_config": {
+        "lang": "en"
+      }
+    }
   },
   "parse": {
     "settings": {
