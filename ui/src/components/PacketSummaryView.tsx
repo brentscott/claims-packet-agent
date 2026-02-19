@@ -349,7 +349,7 @@ export function PacketSummaryView({ data }: { data: ClaimsPacketData }) {
             Claims Packet Analysis
           </h1>
           <p className="text-sm text-gray-500 mt-0.5">
-            Packet {packet_id} &middot; {documents.length} document
+            {patientName || "Patient"} &middot; {documents.length} document
             {documents.length !== 1 ? "s" : ""} processed
           </p>
         </div>
