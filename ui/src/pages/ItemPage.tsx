@@ -6,12 +6,10 @@ import {
   useItemData,
   type Highlight,
   type ExtractedData,
-  Button,
 } from "@llamaindex/ui";
 import {
   Clock,
   XCircle,
-  Download,
   ChevronLeft,
   ChevronRight,
   FileText,
@@ -21,7 +19,6 @@ import { useToolbar } from "@/lib/ToolbarContext";
 import { useNavigate } from "react-router-dom";
 import { modifyJsonSchema } from "@llamaindex/ui/lib";
 import { APP_TITLE } from "@/lib/config";
-import { downloadExtractedDataItem } from "@/lib/export";
 import { useMetadataContext } from "@/lib/MetadataProvider";
 import { convertBoundingBoxesToHighlights } from "@/lib/utils";
 import {
@@ -235,18 +232,6 @@ export default function ItemPage() {
   useEffect(() => {
     setButtons(() => [
       <div className="ml-auto flex items-center gap-2">
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => {
-            if (itemData) {
-              downloadExtractedDataItem(itemData);
-            }
-          }}
-          disabled={!itemData}
-          startIcon={<Download className="h-4 w-4" />}
-          label="Export JSON"
-        />
         <AcceptReject<any>
           itemData={itemHookData}
           onComplete={() => navigate("/")}
