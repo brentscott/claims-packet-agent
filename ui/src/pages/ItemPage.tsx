@@ -1,6 +1,5 @@
 import { useEffect, useState, useMemo } from "react";
 import {
-  AcceptReject,
   ExtractedDataDisplay,
   FilePreview,
   useItemData,
@@ -19,6 +18,7 @@ import { useToolbar } from "@/lib/ToolbarContext";
 import { useNavigate } from "react-router-dom";
 import { modifyJsonSchema } from "@llamaindex/ui/lib";
 import { APP_TITLE } from "@/lib/config";
+import { toast } from "sonner";
 import { useMetadataContext } from "@/lib/MetadataProvider";
 import { convertBoundingBoxesToHighlights } from "@/lib/utils";
 import {
@@ -232,10 +232,34 @@ export default function ItemPage() {
   useEffect(() => {
     setButtons(() => [
       <div className="ml-auto flex items-center gap-2">
-        <AcceptReject<any>
-          itemData={itemHookData}
-          onComplete={() => navigate("/")}
-        />
+        <button
+          className="inline-flex items-center rounded-md border border-red-300 bg-white px-3 py-1.5 text-sm font-medium text-red-700 hover:bg-red-50 transition-colors"
+          onClick={() => {
+            itemHookData.save("rejected").then(() => {
+              toast.success("Packet rejected");
+              navigate("/");
+            }).catch((err: unknown) => {
+              console.error("Error rejecting packet", err);
+              toast.error("Error rejecting packet");
+            });
+          }}
+        >
+          Reject Packet
+        </button>
+        <button
+          className="inline-flex items-center rounded-md border border-green-300 bg-white px-3 py-1.5 text-sm font-medium text-green-700 hover:bg-green-50 transition-colors"
+          onClick={() => {
+            itemHookData.save("approved").then(() => {
+              toast.success("Packet approved");
+              navigate("/");
+            }).catch((err: unknown) => {
+              console.error("Error approving packet", err);
+              toast.error("Error approving packet");
+            });
+          }}
+        >
+          Approve Packet
+        </button>
       </div>,
     ]);
     return () => {
