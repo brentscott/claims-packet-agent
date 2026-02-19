@@ -323,7 +323,6 @@ export function PacketSummaryView({ data }: { data: ClaimsPacketData }) {
     financial_summary,
     recommended_actions,
     summary_narrative,
-    packet_id,
   } = data;
 
   const highCount = validation_results.filter(
