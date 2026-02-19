@@ -92,7 +92,7 @@ export const WorkflowProgress = ({
               delete subscribed.current[handler.handler_id];
             },
             onData(data) {
-              if (data.type === "Status") {
+              if (data.type === "StatusEvent") {
                 const statusData = data.data as StatusMessage["data"];
                 setLogEntries((prev) => [
                   ...prev,
