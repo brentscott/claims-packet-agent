@@ -26,11 +26,11 @@ function getPacketLabel(item: AgentDataItem): string {
 
   const parts: string[] = [];
 
-  // Patient name (Last, First)
-  const last = pkt.patient?.last_name?.trim();
+  // Patient name (First Last)
   const first = pkt.patient?.first_name?.trim();
-  if (last || first) {
-    parts.push([last, first].filter(Boolean).join(", "));
+  const last = pkt.patient?.last_name?.trim();
+  if (first || last) {
+    parts.push([first, last].filter(Boolean).join(" "));
   }
 
   // Dominant doc type summary (e.g., "3 bills, 1 EOB")

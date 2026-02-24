@@ -178,10 +178,10 @@ export default function ItemPage() {
   const packetLabel = useMemo(() => {
     if (!packetData) return null;
     const parts: string[] = [];
-    const last = packetData.patient?.last_name?.trim();
     const first = packetData.patient?.first_name?.trim();
-    if (last || first) {
-      parts.push([last, first].filter(Boolean).join(", "));
+    const last = packetData.patient?.last_name?.trim();
+    if (first || last) {
+      parts.push([first, last].filter(Boolean).join(" "));
     }
     if (Array.isArray(packetData.documents) && packetData.documents.length > 0) {
       const typeCounts: Record<string, number> = {};
