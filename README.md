@@ -440,7 +440,9 @@ MIT License - see LICENSE file for details
 ## Contact
 
 **Author**: Brent Scott
+
 **Email**: bscott3125@gmail.com
+
 **Repository**: [https://github.com/brentscott/claims-packet-agent](https://github.com/brentscott/claims-packet-agent)
 
 ## Acknowledgments
