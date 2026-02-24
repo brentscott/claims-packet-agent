@@ -272,7 +272,7 @@ export default function ItemPage() {
       <div className="flex h-screen items-center justify-center">
         <div className="text-center">
           <Clock className="h-8 w-8 animate-spin mx-auto mb-2" />
-          <div className="text-sm text-gray-500">Loading item...</div>
+          <div className="text-sm text-gray-500">Loading packet...</div>
         </div>
       </div>
     );
@@ -284,7 +284,7 @@ export default function ItemPage() {
         <div className="text-center">
           <XCircle className="h-8 w-8 text-red-500 mx-auto mb-2" />
           <div className="text-sm text-gray-500">
-            Error loading item: {error || "Item not found"}
+            Error loading packet: {error || "Item not found"}
           </div>
         </div>
       </div>

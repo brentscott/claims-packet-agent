@@ -1,7 +1,7 @@
 [project]
 name = "extraction-review"
 version = "0.1.0"
-description = "Extracts data"
+description = "AI-powered insurance claims document analyzer — parses, classifies, extracts, and validates medical billing documents with 16 deterministic cross-document checks"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [

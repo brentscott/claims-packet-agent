@@ -1,11 +1,11 @@
 """Insurance Claims Packet Agent workflow.
 
 A 5-step pipeline that:
-1. Parses documents using LlamaParse
-2. Classifies documents into 7 types (EOB, CMS-1500, UB-04, etc.)
-3. Extracts structured data using type-specific schemas
-4. Validates across documents with 11 deterministic checks
-5. Summarizes with financial reconciliation and action items
+1. Parses documents using LlamaParse (agentic tier, multimodal)
+2. Classifies documents into 11 types (EOB, CMS-1500, UB-04, Medical Bill, etc.)
+3. Extracts structured data using type-specific schemas (85+ fields per type)
+4. Validates across documents with 16 deterministic checks (no LLM)
+5. Summarizes with financial reconciliation and patient-friendly action items
 """
 
 import logging

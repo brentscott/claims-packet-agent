@@ -1,12 +1,21 @@
+.page {
+  height: 100%;
+  overflow: auto;
+}
+
 .main {
-  padding: 1rem;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
 }
 
 .grid {
   display: flex;
   flex-direction: row;
   gap: 1rem;
-  margin-bottom: 1rem;
   & > * {
     flex: 1;
   }
@@ -15,11 +24,6 @@
 .commandBar {
   display: flex;
   justify-content: flex-end;
-  margin-bottom: 1rem;
   gap: 1rem;
   align-items: center;
-}
-
-.progressBar {
-  margin-bottom: 1rem;
 }
